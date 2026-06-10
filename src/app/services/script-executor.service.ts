@@ -518,7 +518,7 @@ export class ScriptExecutorService {
 
   // TODO: 在这里编写你的算法逻辑
   // graph.nodes - 节点数组，每个节点有 id, label 属性
-  // graph.edges - 边数组，每条边有 from, to, weight, capacity 属性
+  // graph.edges - 边数组，每条边有 id, from, to, weight, capacity 属性
   // sourceId - 源节点ID
   // targetId - 目标节点ID（可能为 undefined）
 
@@ -557,6 +557,7 @@ export class ScriptExecutorService {
       const sandboxGraph = {
         nodes: graph.nodes.map((n) => ({ id: n.id, label: n.label })),
         edges: graph.edges.map((e) => ({
+          id: e.id,
           from: e.from,
           to: e.to,
           weight: e.weight,
