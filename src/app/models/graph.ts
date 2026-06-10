@@ -26,7 +26,8 @@ export type AlgorithmType =
   | 'bellman-ford'
   | 'floyd-warshall'
   | 'edmonds-karp'
-  | 'min-cost-max-flow';
+  | 'min-cost-max-flow'
+  | 'custom';
 
 export type NodeColorState =
   | 'default'
@@ -103,12 +104,17 @@ export interface MinCostFlowFrameData {
   currentEdgeInSPFA?: string;
 }
 
+export interface CustomFrameData {
+  [key: string]: any;
+}
+
 export type AlgorithmFrameData =
   | DijkstraFrameData
   | BellmanFordFrameData
   | FloydWarshallFrameData
   | EdmondsKarpFrameData
-  | MinCostFlowFrameData;
+  | MinCostFlowFrameData
+  | CustomFrameData;
 
 export interface AnimationFrame {
   index: number;

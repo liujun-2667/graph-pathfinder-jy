@@ -124,4 +124,32 @@ export const ALGORITHM_INFO: Record<AlgorithmType, AlgorithmInfo> = {
     for all v: potential[v] ← potential[v] + dist[v]
   return totalFlow, totalCost`,
   },
+  custom: {
+    name: '自定义算法',
+    type: 'custom',
+    category: 'shortest-path',
+    description:
+      '用户自定义的图算法脚本。使用 JavaScript 编写，通过帧动画方式展示算法执行过程。可通过右侧脚本编辑器编写、运行和保存自定义算法。',
+    pseudocode: `function myAlgorithm(graph, sourceId, targetId) {
+  const frames = [];
+  
+  // 初始化节点和边的状态
+  // graph.nodes - 节点数组 { id, label }
+  // graph.edges - 边数组 { from, to, weight, capacity }
+  
+  // 添加动画帧
+  frames.push({
+    description: '步骤描述',
+    highlight: {
+      nodeStates: { 'nodeId': 'visiting' },
+      edgeStates: { 'edgeId': 'relaxing' }
+    },
+    data: {
+      // 自定义数据
+    }
+  });
+  
+  return frames;
+}`,
+  },
 };

@@ -9,6 +9,7 @@ import { AnimationControlsComponent } from './components/animation-controls/anim
 import { DataPanelComponent } from './components/data-panel/data-panel.component';
 import { AlgorithmInfoComponent } from './components/algorithm-info/algorithm-info.component';
 import { ResultSummaryComponent } from './components/result-summary/result-summary.component';
+import { CustomScriptPanelComponent } from './components/custom-script-panel/custom-script-panel.component';
 import { GraphService } from './services/graph.service';
 import { AnimationService } from './services/animation.service';
 import { HistoryService, HistoryRecord } from './services/history.service';
@@ -49,6 +50,7 @@ interface RandomGraphConfig {
     DataPanelComponent,
     AlgorithmInfoComponent,
     ResultSummaryComponent,
+    CustomScriptPanelComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -243,6 +245,26 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+  handleRunCustomScript(event: { frames: AnimationFrame[]; scriptName: string }): void {
+    this.compareMode = false;
+    this.compareResult1 = null;
+    this.compareResult2 = null;
+    this.currentAlgorithm = 'custom';
+
+    const result: AlgorithmResult = {
+      frames: event.frames,
+      summary: {
+        type: 'custom',
+        value: event.frames.length,
+        path: undefined,
+      },
+    };
+
+    this.currentResult = result.summary;
+    this.animationService.setFrames(result.frames);
+    this.saveCustomScriptToHistory(event.scriptName, result);
+  }
+
   private saveToHistory(type: AlgorithmType, result: AlgorithmResult): void {
     const algoInfo = ALGORITHM_INFO[type];
     const sourceNode = this.graph.nodes.find((n) => n.id === this.sourceId);
@@ -272,6 +294,34 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
+  private saveCustomScriptToHistory(scriptName: string, result: AlgorithmResult): void {
+    const sourceNode = this.graph.nodes.find((n) => n.id === this.sourceId);
+    const targetNode = this.graph.nodes.find((n) => n.id === this.targetId);
+
+    const resultValue = this.extractResultValue(result.summary);
+    const resultText = this.formatResultText(result.summary);
+
+    this.historyService.addRecord({
+      algorithm: 'custom',
+      algorithmName: scriptName,
+      graphData: {
+        nodes: [...this.graph.nodes],
+        edges: [...this.graph.edges],
+      },
+      sourceId: this.sourceId,
+      targetId: this.targetId,
+      sourceLabel: sourceNode?.label || null,
+      targetLabel: targetNode?.label || null,
+      nodeCount: this.graph.nodes.length,
+      edgeCount: this.graph.edges.length,
+      resultSummary: result.summary,
+      frames: [...result.frames],
+      frameCount: result.frames.length,
+      resultValue,
+      resultText,
+    });
+  }
+
   private extractResultValue(summary: AlgorithmResult['summary']): number | null {
     switch (summary.type) {
       case 'dijkstra':
@@ -283,6 +333,8 @@ export class AppComponent implements OnInit, OnDestroy {
         return summary.maxFlow ?? null;
       case 'min-cost-max-flow':
         return summary.totalFlow ?? null;
+      case 'custom':
+        return summary.value ?? null;
       default:
         return null;
     }
@@ -302,6 +354,8 @@ export class AppComponent implements OnInit, OnDestroy {
         return `最大流: ${summary.maxFlow ?? '-'}`;
       case 'min-cost-max-flow':
         return `流量: ${summary.totalFlow ?? '-'} / 费用: ${summary.totalCost ?? '-'}`;
+      case 'custom':
+        return `${summary.value ?? 0} 帧动画`;
       default:
         return '已完成';
     }

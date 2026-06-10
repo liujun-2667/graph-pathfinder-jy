@@ -223,4 +223,82 @@
       </table>
     </div>
   </ng-container>
+
+  <ng-container *ngIf="algorithmType === 'custom' && isCustomData(frameData)">
+    <div class="section">
+      <h4 class="section-title">自定义脚本数据</h4>
+      <div *ngIf="!hasCustomDataEntries(frameData)" class="empty-state">
+        自定义脚本 - 无额外数据
+      </div>
+      <table *ngIf="hasCustomDataEntries(frameData)" class="data-table custom-data-table">
+        <thead>
+          <tr><th>字段</th><th>值</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of getCustomDataEntries(frameData)">
+            <td class="key-cell">{{ entry.key }}</td>
+            <td class="value-cell">{{ formatCustomValue(entry.value) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-container *ngIf="hasCustomField('distances')">
+      <div class="section">
+        <h4 class="section-title">距离数组</h4>
+        <table class="data-table">
+          <thead>
+            <tr><th>节点</th><th>距离</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of getCustomDistanceEntries()">
+              <td>{{ item.nodeLabel }}</td>
+              <td [class.highlight]="isCustomCurrentNode(item.node)">{{ formatNumber(item.dist) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="hasCustomField('visitedNodes')">
+      <div class="section">
+        <h4 class="section-title">已访问节点</h4>
+        <div class="tag-list">
+          <span *ngFor="let node of getCustomField('visitedNodes')" class="tag tag-settled">{{ getNodeLabel(node) }}</span>
+          <span *ngIf="getCustomField('visitedNodes')?.length === 0" class="empty-inline">无</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="hasCustomField('queue')">
+      <div class="section">
+        <h4 class="section-title">队列</h4>
+        <div class="tag-list">
+          <span *ngFor="let node of getCustomField('queue')" class="tag tag-visiting">{{ getNodeLabel(node) }}</span>
+          <span *ngIf="getCustomField('queue')?.length === 0" class="empty-inline">空</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="hasCustomField('currentPath')">
+      <div class="section">
+        <h4 class="section-title">当前路径</h4>
+        <div class="path-display">
+          {{ formatNodeList(getCustomField('currentPath')) }}
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="hasCustomField('path')">
+      <div class="section">
+        <h4 class="section-title">最短路径</h4>
+        <div class="path-display highlight-path">
+          {{ formatNodeList(getCustomField('path')) }}
+        </div>
+        <div *ngIf="hasCustomField('totalDistance')" class="path-distance">
+          总距离：{{ getCustomField('totalDistance') }}
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
 </div>

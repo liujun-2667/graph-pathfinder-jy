@@ -89,6 +89,11 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
+.custom-script-panel {
+  flex-shrink: 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
 .compare-mode {
   flex: 1;
   display: flex;

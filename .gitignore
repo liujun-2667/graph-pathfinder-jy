@@ -7,6 +7,8 @@ dist/
 .angular/
 build_output.txt
 build-log.txt
+build_log.txt
+build_log2.txt
 install_log.txt
 npm_output.txt
 npm-output.log.err

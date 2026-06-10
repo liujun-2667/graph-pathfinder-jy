@@ -73,6 +73,11 @@
             class="result-panel"
           ></app-result-summary>
         }
+
+        <app-custom-script-panel
+          (runScript)="handleRunCustomScript($event)"
+          class="custom-script-panel"
+        ></app-custom-script-panel>
       </div>
     } @else {
       <div class="compare-mode">

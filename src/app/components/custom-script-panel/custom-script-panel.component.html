@@ -1,0 +1,189 @@
+<div class="custom-script-panel">
+  <div class="panel-header" (click)="toggleCollapse()">
+    <span class="panel-title">自定义算法脚本</span>
+    <span class="collapse-icon">{{ isCollapsed ? '▼' : '▲' }}</span>
+  </div>
+
+  @if (!isCollapsed) {
+  <div class="panel-content">
+    <div class="script-name-row">
+      <label class="name-label">脚本名称：</label>
+      <input
+        type="text"
+        [(ngModel)]="scriptName"
+        class="name-input"
+        placeholder="输入脚本名称"
+      />
+    </div>
+
+    <div class="toolbar-row">
+      <select
+        class="example-select"
+        (change)="onSelectExample($event)"
+        title="加载示例脚本"
+      >
+        <option value="">📚 加载示例...</option>
+        @for (example of exampleScripts; track example.id) {
+        <option [value]="example.id">{{ example.name }}</option>
+        }
+      </select>
+
+      <button class="btn btn-save" (click)="openSaveDialog()" title="保存脚本">
+        💾 保存
+      </button>
+      <button class="btn btn-load" (click)="openLoadDialog()" title="加载脚本">
+        📂 加载
+      </button>
+      <button class="btn btn-manage" (click)="openManageDialog()" title="管理脚本">
+        ⚙️ 管理
+      </button>
+    </div>
+
+    <div class="editor-wrapper">
+      <div #editorContainer class="monaco-editor"></div>
+    </div>
+
+    <div class="action-buttons">
+      <button
+        class="btn btn-primary btn-run"
+        (click)="onRunScript()"
+        [disabled]="isRunning"
+      >
+        {{ isRunning ? '执行中...' : '▶ 运行脚本' }}
+      </button>
+      <button
+        class="btn btn-secondary btn-validate"
+        (click)="onValidate()"
+        [disabled]="isValidating"
+      >
+        {{ isValidating ? '验证中...' : '✓ 验证格式' }}
+      </button>
+    </div>
+
+    @if (executionError) {
+    <div class="error-panel">
+      <div class="error-header">❌ 执行错误</div>
+      <div class="error-content">
+        @if (executionError.lineNumber) {
+        <span class="error-line">第 {{ executionError.lineNumber }} 行</span>
+        }
+        <span class="error-message">{{ executionError.message }}</span>
+      </div>
+    </div>
+    }
+
+    @if (validationResult && !executionError) {
+    <div
+      class="validation-panel"
+      [class.valid]="validationResult.valid"
+      [class.invalid]="!validationResult.valid"
+    >
+      @if (validationResult.valid) {
+      <div class="validation-header valid">✅ 格式验证通过</div>
+      <div class="validation-content">
+        所有 {{ validationResult.errors.length === 0 ? '帧' : '' }} 格式均符合要求
+      </div>
+      } @else {
+      <div class="validation-header invalid">⚠️ 格式验证失败</div>
+      <div class="validation-errors">
+        @for (error of validationResult.errors; track error.frameIndex + '-' +
+        error.field) {
+        <div class="validation-error-item">
+          <span class="error-frame"
+            >{{ error.frameIndex >= 0 ? '第' + (error.frameIndex + 1) + '帧' : '根'
+            }}</span
+          >
+          <span class="error-field">[{{ error.field }}]</span>
+          <span class="error-desc">{{ error.message }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+</div>
+
+@if (showSaveDialog) {
+<div class="dialog-overlay" (click)="closeSaveDialog()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">保存脚本</div>
+    <div class="dialog-body">
+      <label class="dialog-label">脚本名称：</label>
+      <input
+        type="text"
+        [(ngModel)]="newScriptName"
+        class="dialog-input"
+        placeholder="输入脚本名称"
+        (keyup.enter)="onSaveScript()"
+      />
+      <p class="dialog-hint">
+        最多保存 {{ scriptExecutor.getMaxSavedScripts() }} 个脚本
+      </p>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-cancel" (click)="closeSaveDialog()">取消</button>
+      <button class="btn btn-primary" (click)="onSaveScript()">保存</button>
+    </div>
+  </div>
+</div>
+}
+
+@if (showLoadDialog) {
+<div class="dialog-overlay" (click)="closeLoadDialog()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">加载脚本</div>
+    <div class="dialog-body">
+      @if (savedScripts.length === 0) {
+      <div class="empty-state">暂无保存的脚本</div>
+      } @else {
+      <div class="script-list">
+        @for (script of savedScripts; track script.id) {
+        <div class="script-item" (click)="onLoadScript(script)">
+          <div class="script-item-name">{{ script.name }}</div>
+          <div class="script-item-date">{{ formatDate(script.createdAt) }}</div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-cancel" (click)="closeLoadDialog()">取消</button>
+    </div>
+  </div>
+</div>
+}
+
+@if (showManageDialog) {
+<div class="dialog-overlay" (click)="closeManageDialog()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">管理脚本</div>
+    <div class="dialog-body">
+      @if (savedScripts.length === 0) {
+      <div class="empty-state">暂无保存的脚本</div>
+      } @else {
+      <div class="script-list manage-list">
+        @for (script of savedScripts; track script.id) {
+        <div class="script-item">
+          <div class="script-item-info">
+            <div class="script-item-name">{{ script.name }}</div>
+            <div class="script-item-date">{{ formatDate(script.createdAt) }}</div>
+          </div>
+          <button
+            class="btn btn-delete-small"
+            (click)="onDeleteScript(script)"
+          >
+            删除
+          </button>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-cancel" (click)="closeManageDialog()">关闭</button>
+    </div>
+  </div>
+</div>
+}

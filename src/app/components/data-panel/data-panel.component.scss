@@ -200,3 +200,39 @@
     }
   }
 }
+
+.custom-data-table {
+  .key-cell {
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #667eea;
+    font-weight: 500;
+    background: #f8f9fa;
+  }
+
+  .value-cell {
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #333;
+    word-break: break-all;
+  }
+}
+
+.highlight-path {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  font-weight: 500;
+}
+
+.path-distance {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #fff3e0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #e65100;
+  text-align: center;
+}
+
+.tag-visiting {
+  background: #fff3e0;
+  color: #e65100;
+}
