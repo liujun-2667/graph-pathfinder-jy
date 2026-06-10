@@ -63,3 +63,25 @@ code, pre {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 13px;
 }
+
+.breakpoint-glyph {
+  background: #e53935 !important;
+  border-radius: 50%;
+  width: 10px !important;
+  height: 10px !important;
+  margin-left: 5px;
+  margin-top: 5px;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.breakpoint-line {
+  background: rgba(229, 57, 53, 0.1) !important;
+}
+
+.current-line-highlight {
+  background: rgba(102, 126, 234, 0.25) !important;
+}
+
+.current-line-marker {
+  border-left: 3px solid #667eea !important;
+}

@@ -40,8 +40,117 @@
     </div>
 
     <div class="editor-wrapper">
+      @if (isExecuting) {
+      <div class="progress-overlay">
+        <div class="progress-bar-container">
+          <div class="progress-bar"></div>
+        </div>
+        <div class="progress-text">脚本执行中...</div>
+      </div>
+      }
       <div #editorContainer class="monaco-editor"></div>
     </div>
+
+    @if (hasFrames) {
+    <div class="debug-controls">
+      <button
+        class="btn btn-debug btn-step"
+        (click)="onStepForward()"
+        [disabled]="!canStep"
+        title="单步执行"
+      >
+        ⏭ 单步执行
+      </button>
+      <button
+        class="btn btn-debug btn-continue"
+        (click)="onContinue()"
+        [disabled]="!canContinue"
+        title="继续运行到下一个断点"
+      >
+        ▶ 继续运行
+      </button>
+      <span class="debug-info">
+        帧 {{ currentFrameIndex + 1 }} / {{ debugFrames.length }}
+      </span>
+    </div>
+    }
+
+    @if (hasFrames) {
+    <div class="variables-section">
+      <div class="section-header" (click)="toggleVariablesPanel()">
+        <span class="section-title">📊 变量面板</span>
+        <span class="section-toggle">{{ showVariablesPanel ? '−' : '+' }}</span>
+      </div>
+      @if (showVariablesPanel) {
+      <div class="variables-content">
+        @if (variableNodes.length === 0) {
+        <div class="empty-vars">暂无局部变量</div>
+        } @else {
+        <div class="var-tree">
+          @for (node of variableNodes; track node.key) {
+          <div class="var-item" [class.expandable]="node.type !== 'primitive' && node.type !== 'function'">
+            <span
+              class="var-toggle"
+              (click)="toggleVarNode(node)"
+              *ngIf="node.type !== 'primitive' && node.type !== 'function'"
+            >
+              {{ node.expanded ? '▼' : '▶' }}
+            </span>
+            <span
+              class="var-toggle-spacer"
+              *ngIf="node.type === 'primitive' || node.type === 'function'"
+            ></span>
+            <span class="var-key">{{ node.key }}</span>
+            <span class="var-separator">:</span>
+            <span class="var-value" [ngClass]="'type-' + node.type">
+              {{ node.value }}
+            </span>
+            @if (node.expanded && node.children && node.children.length > 0) {
+            <div class="var-children">
+              @for (child of node.children; track child.key) {
+              <div class="var-child-item" [class.expandable]="child.type !== 'primitive' && child.type !== 'function'">
+                <span
+                  class="var-toggle"
+                  (click)="toggleVarNode(child)"
+                  *ngIf="child.type !== 'primitive' && child.type !== 'function'"
+                >
+                  {{ child.expanded ? '▼' : '▶' }}
+                </span>
+                <span
+                  class="var-toggle-spacer"
+                  *ngIf="child.type === 'primitive' || child.type === 'function'"
+                ></span>
+                <span class="var-key">{{ child.key }}</span>
+                <span class="var-separator">:</span>
+                <span class="var-value" [ngClass]="'type-' + child.type">
+                  {{ child.value }}
+                </span>
+                @if (child.expanded && child.children && child.children.length > 0) {
+                <div class="var-grandchildren">
+                  @for (grandchild of child.children; track grandchild.key) {
+                  <div class="var-grandchild-item">
+                    <span class="var-toggle-spacer"></span>
+                    <span class="var-key">{{ grandchild.key }}</span>
+                    <span class="var-separator">:</span>
+                    <span class="var-value" [ngClass]="'type-' + grandchild.type">
+                      {{ grandchild.value }}
+                    </span>
+                  </div>
+                  }
+                </div>
+                }
+              </div>
+              }
+            </div>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
 
     <div class="action-buttons">
       <button
@@ -60,7 +169,14 @@
       </button>
     </div>
 
-    @if (executionError) {
+    @if (showTimeoutWarning) {
+    <div class="timeout-warning">
+      <div class="timeout-header">⏰ 执行超时</div>
+      <div class="timeout-content">执行超时,可能存在死循环，画布已恢复</div>
+    </div>
+    }
+
+    @if (executionError && !showTimeoutWarning) {
     <div class="error-panel">
       <div class="error-header">❌ 执行错误</div>
       <div class="error-content">
@@ -95,6 +211,32 @@
           >
           <span class="error-field">[{{ error.field }}]</span>
           <span class="error-desc">{{ error.message }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    @if (hasFrames) {
+    <div class="log-section">
+      <div class="section-header" (click)="toggleLogPanel()">
+        <span class="section-title">📜 执行日志</span>
+        <span class="section-count">{{ logEntries.length }} 条</span>
+        <span class="section-toggle">{{ showLogPanel ? '−' : '+' }}</span>
+      </div>
+      @if (showLogPanel) {
+      <div class="log-content" #logContainer>
+        @for (entry of logEntries; track entry.frameIndex) {
+        <div
+          class="log-entry"
+          [class.active]="entry.frameIndex === currentFrameIndex"
+          (click)="onLogClick(entry)"
+          title="点击跳转到该帧"
+        >
+          <span class="log-time">{{ formatTime(entry.timestamp) }}</span>
+          <span class="log-line">L{{ entry.lineNumber }}</span>
+          <span class="log-desc">{{ entry.description }}</span>
         </div>
         }
       </div>

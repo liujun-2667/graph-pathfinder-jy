@@ -34,8 +34,30 @@ export interface ExampleScript {
   code: string;
 }
 
+export interface DebugFrame extends AnimationFrame {
+  __debugLine__: number;
+  __debugVars__: Record<string, any>;
+  __debugTimestamp__: number;
+}
+
+export interface DebugExecutionResult {
+  frames: DebugFrame[];
+  error?: ScriptError;
+  timedOut?: boolean;
+  executionTime?: number;
+}
+
+export interface ExecutionLogEntry {
+  frameIndex: number;
+  timestamp: number;
+  description: string;
+  lineNumber: number;
+}
+
 const STORAGE_KEY = 'graph-custom-scripts';
+const BREAKPOINTS_STORAGE_KEY = 'graph-custom-scripts-breakpoints';
 const MAX_SAVED_SCRIPTS = 10;
+const EXECUTION_TIMEOUT_MS = 3000;
 
 const BFS_EXAMPLE = `function myAlgorithm(graph, sourceId, targetId) {
   const frames = [];
@@ -515,6 +537,22 @@ export class ScriptExecutorService {
     sourceId: string | null,
     targetId: string | null
   ): { frames: AnimationFrame[]; error?: ScriptError } {
+    const result = this.executeScriptDebug(code, graph, sourceId, targetId);
+    return {
+      frames: result.frames as AnimationFrame[],
+      error: result.error,
+    };
+  }
+
+  executeScriptDebug(
+    code: string,
+    graph: GraphData,
+    sourceId: string | null,
+    targetId: string | null
+  ): DebugExecutionResult {
+    const startTime = Date.now();
+    let timedOut = false;
+
     try {
       const sandboxGraph = {
         nodes: graph.nodes.map((n) => ({ id: n.id, label: n.label })),
@@ -526,28 +564,58 @@ export class ScriptExecutorService {
         })),
       };
 
+      const instrumentedCode = this.instrumentCode(code);
+
       const func = new Function(
         'graph',
         'sourceId',
         'targetId',
-        `${code}; return myAlgorithm(graph, sourceId, targetId);`
+        '__startTime__',
+        '__timeoutMs__',
+        `${instrumentedCode}; return myAlgorithm(graph, sourceId, targetId, __startTime__, __timeoutMs__);`
       );
 
-      const result = func(sandboxGraph, sourceId || undefined, targetId || undefined);
+      let result: any;
+      try {
+        result = func(
+          sandboxGraph,
+          sourceId || undefined,
+          targetId || undefined,
+          startTime,
+          EXECUTION_TIMEOUT_MS
+        );
+      } catch (e: any) {
+        if (e.message && e.message.includes('__TIMEOUT__')) {
+          timedOut = true;
+          return {
+            frames: e.__frames__ || [],
+            timedOut: true,
+            executionTime: Date.now() - startTime,
+          };
+        }
+        throw e;
+      }
 
       if (!Array.isArray(result)) {
         return {
           frames: [],
           error: { message: '函数必须返回一个数组' },
+          executionTime: Date.now() - startTime,
         };
       }
 
-      const frames: AnimationFrame[] = result.map((frame: any, index: number) => ({
+      const frames: DebugFrame[] = result.map((frame: any, index: number) => ({
         ...frame,
         index,
+        __debugLine__: frame.__debugLine__ ?? 0,
+        __debugVars__: frame.__debugVars__ ?? {},
+        __debugTimestamp__: frame.__debugTimestamp__ ?? startTime,
       }));
 
-      return { frames };
+      return {
+        frames,
+        executionTime: Date.now() - startTime,
+      };
     } catch (e: any) {
       const error: ScriptError = {
         message: e.message || '未知错误',
@@ -561,8 +629,101 @@ export class ScriptExecutorService {
         }
       }
 
-      return { frames: [], error };
+      return {
+        frames: [],
+        error,
+        timedOut,
+        executionTime: Date.now() - startTime,
+      };
     }
+  }
+
+  private instrumentCode(code: string): string {
+    const lines = code.split('\n');
+    const resultLines: string[] = [];
+    const declaredVars = new Set<string>();
+
+    const addFrameStartRegex = /addFrame\s*\(/;
+
+    let inAddFrameCall = false;
+    let parenDepth = 0;
+    let addFrameStartLine = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lineNum = i + 1;
+
+      const varMatches = line.matchAll(/\b(?:let|const|var)\s+([a-zA-Z_$][\w$]*)/g);
+      for (const match of varMatches) {
+        declaredVars.add(match[1]);
+      }
+
+      if (!inAddFrameCall && addFrameStartRegex.test(line)) {
+        inAddFrameCall = true;
+        addFrameStartLine = i;
+        parenDepth = 0;
+
+        const varsCode = this.buildVarsCaptureCode(declaredVars);
+        const indent = line.match(/^\s*/)?.[0] || '';
+
+        resultLines.push(`${indent}var __lineNum__ = ${lineNum};`);
+        resultLines.push(`${indent}var __varsSnapshot__ = ${varsCode};`);
+        resultLines.push(`${indent}var __ts__ = Date.now();`);
+        resultLines.push(`${indent}var __timeoutCheck__ = Date.now() - __startTime__ > __timeoutMs__;`);
+        resultLines.push(`${indent}if (__timeoutCheck__) {`);
+        resultLines.push(`${indent}  var __e__ = new Error('__TIMEOUT__');`);
+        resultLines.push(`${indent}  __e__.__frames__ = frames;`);
+        resultLines.push(`${indent}  throw __e__;`);
+        resultLines.push(`${indent}}`);
+        resultLines.push(`${indent}var __prevFrameCount__ = frames.length;`);
+      }
+
+      if (inAddFrameCall) {
+        for (const ch of line) {
+          if (ch === '(') parenDepth++;
+          else if (ch === ')') {
+            parenDepth--;
+            if (parenDepth <= 0) {
+              inAddFrameCall = false;
+              break;
+            }
+          }
+        }
+      }
+
+      resultLines.push(line);
+
+      if (addFrameStartLine >= 0 && !inAddFrameCall && parenDepth <= 0) {
+        const indent = lines[addFrameStartLine].match(/^\s*/)?.[0] || '';
+        resultLines.push(`${indent}if (frames.length > __prevFrameCount__) {`);
+        resultLines.push(`${indent}  var __lastFrame__ = frames[frames.length - 1];`);
+        resultLines.push(`${indent}  __lastFrame__.__debugLine__ = __lineNum__;`);
+        resultLines.push(`${indent}  __lastFrame__.__debugVars__ = __varsSnapshot__;`);
+        resultLines.push(`${indent}  __lastFrame__.__debugTimestamp__ = __ts__;`);
+        resultLines.push(`${indent}}`);
+        addFrameStartLine = -1;
+        parenDepth = 0;
+      }
+    }
+
+    return resultLines.join('\n');
+  }
+
+  private buildVarsCaptureCode(varNames: Set<string>): string {
+    const filtered = Array.from(varNames).filter(
+      (v) => !['frames', 'frameIndex', 'addFrame', '__lineNum__', '__varsSnapshot__', '__ts__', '__timeoutCheck__'].includes(v)
+    );
+
+    if (filtered.length === 0) {
+      return '{}';
+    }
+
+    const props = filtered.map((v) => {
+      const safeValue = `typeof ${v} !== 'undefined' ? ${v} : undefined`;
+      return `${v}: ${safeValue}`;
+    });
+
+    return `(function(){ try { return { ${props.join(', ')} }; } catch(e) { return {}; } })()`;
   }
 
   validateFrames(frames: any[]): ValidationResult {
@@ -675,6 +836,7 @@ export class ScriptExecutorService {
     if (!isPlatformBrowser(this.platformId)) return;
     const scripts = this.getSavedScripts().filter((s) => s.id !== id);
     this.saveToStorage(scripts);
+    this.deleteBreakpoints(id);
   }
 
   updateScript(id: string, name: string, code: string): boolean {
@@ -708,6 +870,50 @@ export class ScriptExecutorService {
     return MAX_SAVED_SCRIPTS;
   }
 
+  getBreakpoints(scriptId: string): number[] {
+    if (!isPlatformBrowser(this.platformId)) return [];
+    try {
+      const stored = localStorage.getItem(BREAKPOINTS_STORAGE_KEY);
+      if (stored) {
+        const allBreakpoints = JSON.parse(stored) as Record<string, number[]>;
+        return allBreakpoints[scriptId] || [];
+      }
+    } catch {
+      console.warn('Failed to load breakpoints from localStorage');
+    }
+    return [];
+  }
+
+  saveBreakpoints(scriptId: string, breakpoints: number[]): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      const stored = localStorage.getItem(BREAKPOINTS_STORAGE_KEY);
+      const allBreakpoints = stored ? JSON.parse(stored) : {};
+      allBreakpoints[scriptId] = breakpoints;
+      localStorage.setItem(BREAKPOINTS_STORAGE_KEY, JSON.stringify(allBreakpoints));
+    } catch {
+      console.warn('Failed to save breakpoints to localStorage');
+    }
+  }
+
+  deleteBreakpoints(scriptId: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      const stored = localStorage.getItem(BREAKPOINTS_STORAGE_KEY);
+      if (stored) {
+        const allBreakpoints = JSON.parse(stored) as Record<string, number[]>;
+        delete allBreakpoints[scriptId];
+        localStorage.setItem(BREAKPOINTS_STORAGE_KEY, JSON.stringify(allBreakpoints));
+      }
+    } catch {
+      console.warn('Failed to delete breakpoints from localStorage');
+    }
+  }
+
+  getDefaultBreakpointsKey(): string {
+    return '__default_script__';
+  }
+
   buildAlgorithmResult(frames: AnimationFrame[], scriptName: string): AlgorithmResult {
     return {
       frames,
@@ -717,5 +923,86 @@ export class ScriptExecutorService {
         path: undefined,
       },
     };
+  }
+
+  getTimeoutMs(): number {
+    return EXECUTION_TIMEOUT_MS;
+  }
+
+  deepCloneVariables(obj: any, maxDepth: number = 2): any {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+
+    if (typeof obj !== 'object') {
+      return obj;
+    }
+
+    if (maxDepth <= 0) {
+      if (Array.isArray(obj)) {
+        return `[${obj.length} 项]`;
+      }
+      if (obj instanceof Set) {
+        return `Set(${obj.size})`;
+      }
+      if (obj instanceof Map) {
+        return `Map(${obj.size})`;
+      }
+      return '{...}';
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.deepCloneVariables(item, maxDepth - 1));
+    }
+
+    if (obj instanceof Set) {
+      return {
+        __type__: 'Set',
+        values: Array.from(obj).map((item) => this.deepCloneVariables(item, maxDepth - 1)),
+      };
+    }
+
+    if (obj instanceof Map) {
+      const entries: Array<{ key: any; value: any }> = [];
+      obj.forEach((value, key) => {
+        entries.push({
+          key: this.deepCloneVariables(key, maxDepth - 1),
+          value: this.deepCloneVariables(value, maxDepth - 1),
+        });
+      });
+      return {
+        __type__: 'Map',
+        entries,
+      };
+    }
+
+    const result: Record<string, any> = {};
+    for (const key of Object.keys(obj)) {
+      try {
+        result[key] = this.deepCloneVariables(obj[key], maxDepth - 1);
+      } catch {
+        result[key] = '[无法访问]';
+      }
+    }
+    return result;
+  }
+
+  formatVariableValue(value: any): string {
+    if (value === null) return 'null';
+    if (value === undefined) return 'undefined';
+    if (typeof value === 'string') return `"${value}"`;
+    if (typeof value === 'number') return String(value);
+    if (typeof value === 'boolean') return String(value);
+    if (typeof value === 'function') return 'ƒ function()';
+    if (Array.isArray(value)) return `Array(${value.length})`;
+    if (value instanceof Set) return `Set(${value.size})`;
+    if (value instanceof Map) return `Map(${value.size})`;
+    if (typeof value === 'object') {
+      if (value.__type__ === 'Set') return `Set(${value.values?.length || 0})`;
+      if (value.__type__ === 'Map') return `Map(${value.entries?.length || 0})`;
+      const keys = Object.keys(value);
+      return `{${keys.length} 个字段}`;
+    }
+    return String(value);
   }
 }
