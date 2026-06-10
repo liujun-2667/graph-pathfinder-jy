@@ -68,6 +68,7 @@
         @if (currentResult) {
           <app-result-summary
             [result]="currentResult"
+            [graph]="graph"
             class="result-panel"
           ></app-result-summary>
         }
@@ -90,7 +91,7 @@
             {{ compareFrame1?.description || '（已完成）' }}
           </div>
           @if (compareResult1) {
-            <app-result-summary [result]="compareResult1.summary" class="result-mini"></app-result-summary>
+            <app-result-summary [result]="compareResult1.summary" [graph]="graph" class="result-mini"></app-result-summary>
           }
         </div>
 
@@ -118,7 +119,7 @@
             {{ compareFrame2?.description || '（已完成）' }}
           </div>
           @if (compareResult2) {
-            <app-result-summary [result]="compareResult2.summary" class="result-mini"></app-result-summary>
+            <app-result-summary [result]="compareResult2.summary" [graph]="graph" class="result-mini"></app-result-summary>
           }
         </div>
       </div>

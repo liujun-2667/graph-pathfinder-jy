@@ -15,7 +15,7 @@
         <span class="result-label">具体路径：</span>
       </div>
       <div *ngIf="result.path && result.path.length > 0" class="path-display">
-        {{ result.path.join(' → ') }}
+        {{ formatPath(result.path) }}
       </div>
       <div *ngIf="!result.path || result.path.length === 0" class="no-path">
         不可达
@@ -29,10 +29,10 @@
       <div *ngIf="result.paths && result.paths.length > 0" class="paths-list">
         <div *ngFor="let p of result.paths" class="path-item">
           <div class="path-header">
-            <span class="path-from-to">{{ p.from }} → {{ p.to }}</span>
+            <span class="path-from-to">{{ getNodeLabel(p.from) }} → {{ getNodeLabel(p.to) }}</span>
             <span class="path-distance">距离：{{ p.distance }}</span>
           </div>
-          <div class="path-detail">{{ p.path.join(' → ') }}</div>
+          <div class="path-detail">{{ formatPath(p.path) }}</div>
         </div>
       </div>
     </div>
@@ -51,11 +51,11 @@
         <div class="min-cut-sets">
           <div class="cut-set">
             <span class="cut-label">S：</span>
-            <span class="cut-nodes">{{ result.minCut.S.join(', ') }}</span>
+            <span class="cut-nodes">{{ formatNodeList(result.minCut.S) }}</span>
           </div>
           <div class="cut-set">
             <span class="cut-label">T：</span>
-            <span class="cut-nodes">{{ result.minCut.T.join(', ') }}</span>
+            <span class="cut-nodes">{{ formatNodeList(result.minCut.T) }}</span>
           </div>
         </div>
       </div>
@@ -87,7 +87,7 @@
         <span class="result-label">负环节点：</span>
       </div>
       <div *ngIf="result.hasNegativeCycle && result.negativeCycle && result.negativeCycle.length" class="negative-cycle-display">
-        {{ result.negativeCycle.join(' → ') }}
+        {{ formatPath(result.negativeCycle) }}
       </div>
     </div>
   </ng-container>

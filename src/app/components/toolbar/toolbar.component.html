@@ -21,10 +21,10 @@
 
   <div class="toolbar-group">
     <label class="switch">
-      <input type="checkbox" [checked]="compareMode" (change)="onToggleCompareMode()">
+      <input type="checkbox" id="compareModeToggle" [checked]="compareMode" (change)="onToggleCompareMode()">
       <span class="slider"></span>
     </label>
-    <span class="compare-label">对比模式</span>
+    <label class="compare-label" for="compareModeToggle">对比模式</label>
   </div>
 
   <input #fileInput type="file" accept=".json" style="display: none" (change)="onFileSelected($event)">

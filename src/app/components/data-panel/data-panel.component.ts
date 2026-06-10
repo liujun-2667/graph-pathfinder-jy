@@ -43,8 +43,12 @@ export class DataPanelComponent {
     return this.algorithmType === 'min-cost-max-flow' && data !== null && 'potential' in data;
   }
 
-  getDistanceEntries(data: DijkstraFrameData | BellmanFordFrameData): { node: string; dist: number }[] {
-    return Object.entries(data.distances).map(([node, dist]) => ({ node, dist }));
+  getDistanceEntries(data: DijkstraFrameData | BellmanFordFrameData): { node: string; nodeLabel: string; dist: number }[] {
+    return Object.entries(data.distances).map(([node, dist]) => ({
+      node,
+      nodeLabel: this.getNodeLabel(node),
+      dist,
+    }));
   }
 
   formatNumber(n: number): string {
@@ -52,10 +56,23 @@ export class DataPanelComponent {
     return n.toString();
   }
 
+  getNodeLabel(nodeId: string): string {
+    const node = this.graph.nodes.find(n => n.id === nodeId);
+    return node?.label || nodeId;
+  }
+
+  formatNodeList(nodeIds: string[]): string {
+    return nodeIds.map(id => this.getNodeLabel(id)).join(' → ');
+  }
+
+  formatNodeListComma(nodeIds: string[]): string {
+    return nodeIds.map(id => this.getNodeLabel(id)).join(', ');
+  }
+
   getEdgeLabel(edgeId: string): string {
     const edge = this.graph.edges.find(e => e.id === edgeId);
     if (!edge) return edgeId;
-    return `${edge.from}→${edge.to}`;
+    return `${this.getNodeLabel(edge.from)}→${this.getNodeLabel(edge.to)}`;
   }
 
   isCellUpdated(data: FloydWarshallFrameData, i: number, j: number): boolean {
@@ -64,6 +81,10 @@ export class DataPanelComponent {
 
   isCurrentCell(data: FloydWarshallFrameData, i: number, j: number): boolean {
     return data.currentI === i && data.currentJ === j;
+  }
+
+  getFloydNodeLabels(data: FloydWarshallFrameData): string[] {
+    return data.nodeLabels.map(id => this.getNodeLabel(id));
   }
 
   readonly INF = Infinity;

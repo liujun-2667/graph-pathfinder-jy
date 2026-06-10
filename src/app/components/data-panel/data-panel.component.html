@@ -14,7 +14,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of getDistanceEntries(frameData)">
-            <td>{{ item.node }}</td>
+            <td>{{ item.nodeLabel }}</td>
             <td [class.highlight]="frameData.currentNode === item.node">{{ formatNumber(item.dist) }}</td>
           </tr>
         </tbody>
@@ -29,7 +29,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of frameData.priorityQueue; let i = index" [class.top]="i === 0">
-            <td>{{ item.node }}</td>
+            <td>{{ getNodeLabel(item.node) }}</td>
             <td>{{ formatNumber(item.dist) }}</td>
           </tr>
           <tr *ngIf="frameData.priorityQueue.length === 0">
@@ -63,7 +63,7 @@
       </div>
       <div class="info-row" *ngIf="frameData.negativeCycleNodes && frameData.negativeCycleNodes.length">
         <span class="info-label">负环节点：</span>
-        <span class="info-value negative">{{ frameData.negativeCycleNodes.join(' → ') }}</span>
+        <span class="info-value negative">{{ formatNodeList(frameData.negativeCycleNodes) }}</span>
       </div>
     </div>
 
@@ -106,12 +106,12 @@
           <thead>
             <tr>
               <th></th>
-              <th *ngFor="let label of frameData.nodeLabels">{{ label }}</th>
+              <th *ngFor="let label of getFloydNodeLabels(frameData)">{{ label }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let row of frameData.distanceMatrix; let i = index">
-              <th>{{ frameData.nodeLabels[i] }}</th>
+              <th>{{ getFloydNodeLabels(frameData)[i] }}</th>
               <td
                 *ngFor="let cell of row; let j = index"
                 [class.updated]="isCellUpdated(frameData, i, j)"
@@ -154,11 +154,11 @@
     <div class="section">
       <h4 class="section-title">增广路径</h4>
       <div *ngIf="frameData.augmentingPath.length > 0" class="path-display">
-        {{ frameData.augmentingPath.join(' → ') }}
+        {{ formatNodeList(frameData.augmentingPath) }}
       </div>
       <div *ngIf="frameData.minCutS && frameData.minCutT" class="min-cut">
-        <div><strong>S：</strong>{{ frameData.minCutS.join(', ') }}</div>
-        <div><strong>T：</strong>{{ frameData.minCutT.join(', ') }}</div>
+        <div><strong>S：</strong>{{ formatNodeListComma(frameData.minCutS) }}</div>
+        <div><strong>T：</strong>{{ formatNodeListComma(frameData.minCutT) }}</div>
       </div>
     </div>
   </ng-container>
@@ -201,7 +201,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let node of graph.nodes">
-            <td>{{ node.id }}</td>
+            <td>{{ node.label }}</td>
             <td>{{ formatNumber(frameData.distances[node.id] || INF) }}</td>
             <td>{{ frameData.potential[node.id] || 0 }}</td>
           </tr>

@@ -115,6 +115,8 @@
 .compare-label {
   font-size: 14px;
   color: #333;
+  cursor: pointer;
+  user-select: none;
 }
 
 .modal-overlay {
