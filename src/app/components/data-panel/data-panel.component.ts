@@ -62,17 +62,24 @@ export class DataPanelComponent {
     if (value === null || value === undefined) {
       return 'null';
     }
+    if (typeof value === 'string') {
+      const node = this.graph.nodes.find(n => n.id === value);
+      if (node) {
+        return node.label;
+      }
+      return value.length > 50 ? value.substring(0, 50) + '...' : value;
+    }
     if (typeof value === 'object') {
       if (Array.isArray(value)) {
         if (value.length === 0) return '[]';
+        if (value.every(v => typeof v === 'string' && this.graph.nodes.some(n => n.id === v))) {
+          return value.map(v => this.getNodeLabel(v)).join(', ');
+        }
         return `[${value.length} 项]`;
       }
       const keys = Object.keys(value);
       if (keys.length === 0) return '{}';
       return `{${keys.length} 个字段}`;
-    }
-    if (typeof value === 'string') {
-      return value.length > 50 ? value.substring(0, 50) + '...' : value;
     }
     return String(value);
   }

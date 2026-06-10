@@ -136,6 +136,8 @@ export interface AlgorithmResult {
     totalCost?: number;
     hasNegativeCycle?: boolean;
     negativeCycle?: string[];
+    scriptName?: string;
+    frameCount?: number;
   };
 }
 
@@ -144,5 +146,5 @@ export interface AlgorithmInfo {
   type: AlgorithmType;
   description: string;
   pseudocode: string;
-  category: 'shortest-path' | 'network-flow';
+  category: 'shortest-path' | 'network-flow' | 'custom';
 }

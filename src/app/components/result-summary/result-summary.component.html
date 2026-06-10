@@ -91,4 +91,23 @@
       </div>
     </div>
   </ng-container>
+
+  <ng-container *ngIf="result && isCustomScript(result)">
+    <div class="result-section custom-result">
+      <div class="result-row">
+        <span class="result-label">脚本名称：</span>
+        <span class="result-value highlight">{{ result.scriptName || '未命名脚本' }}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">动画帧数：</span>
+        <span class="result-value">{{ result.frameCount ?? result.value ?? 0 }} 帧</span>
+      </div>
+      <div class="result-row" *ngIf="result.path && result.path.length > 0">
+        <span class="result-label">结果路径：</span>
+      </div>
+      <div *ngIf="result.path && result.path.length > 0" class="path-display highlight-path">
+        {{ formatPath(result.path) }}
+      </div>
+    </div>
+  </ng-container>
 </div>

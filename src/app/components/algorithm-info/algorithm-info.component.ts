@@ -119,7 +119,7 @@ const ALGORITHM_INFO_MAP: Record<AlgorithmType, AlgorithmInfo> = {
   
   return frames;
 }`,
-    category: 'shortest-path'
+    category: 'custom'
   }
 };
 

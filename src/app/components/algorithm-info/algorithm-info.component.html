@@ -8,8 +8,8 @@
   <ng-container *ngIf="info">
     <div class="info-section">
       <h3 class="algo-name">{{ info.name }}</h3>
-      <span class="algo-category" [class.path]="info.category === 'shortest-path'" [class.flow]="info.category === 'network-flow'">
-        {{ info.category === 'shortest-path' ? '最短路径' : '网络流' }}
+      <span class="algo-category" [class.path]="info.category === 'shortest-path'" [class.flow]="info.category === 'network-flow'" [class.custom]="info.category === 'custom'">
+        {{ info.category === 'shortest-path' ? '最短路径' : info.category === 'network-flow' ? '网络流' : '自定义脚本' }}
       </span>
     </div>
 

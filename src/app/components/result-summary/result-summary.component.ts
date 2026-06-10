@@ -35,6 +35,10 @@ export class ResultSummaryComponent {
     return s?.type === 'bellman-ford' && s?.hasNegativeCycle !== undefined;
   }
 
+  isCustomScript(s: SummaryType): boolean {
+    return s?.type === 'custom';
+  }
+
   getNodeLabel(nodeId: string): string {
     const node = this.graph.nodes.find(n => n.id === nodeId);
     return node?.label || nodeId;

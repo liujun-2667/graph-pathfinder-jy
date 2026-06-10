@@ -127,7 +127,7 @@ export const ALGORITHM_INFO: Record<AlgorithmType, AlgorithmInfo> = {
   custom: {
     name: '自定义算法',
     type: 'custom',
-    category: 'shortest-path',
+    category: 'custom',
     description:
       '用户自定义的图算法脚本。使用 JavaScript 编写，通过帧动画方式展示算法执行过程。可通过右侧脚本编辑器编写、运行和保存自定义算法。',
     pseudocode: `function myAlgorithm(graph, sourceId, targetId) {

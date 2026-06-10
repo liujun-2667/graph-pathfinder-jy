@@ -257,6 +257,8 @@ export class AppComponent implements OnInit, OnDestroy {
         type: 'custom',
         value: event.frames.length,
         path: undefined,
+        scriptName: event.scriptName,
+        frameCount: event.frames.length,
       },
     };
 
