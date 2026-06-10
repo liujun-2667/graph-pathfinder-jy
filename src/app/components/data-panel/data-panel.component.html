@@ -42,7 +42,7 @@
     <div class="section">
       <h4 class="section-title">已确定节点</h4>
       <div class="tag-list">
-        <span *ngFor="let node of frameData.settledNodes" class="tag tag-settled">{{ node }}</span>
+        <span *ngFor="let node of frameData.settledNodes" class="tag tag-settled">{{ getNodeLabel(node) }}</span>
         <span *ngIf="frameData.settledNodes.length === 0" class="empty-inline">无</span>
       </div>
     </div>
@@ -75,7 +75,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of getDistanceEntries(frameData)">
-            <td>{{ item.node }}</td>
+            <td>{{ item.nodeLabel }}</td>
             <td>{{ formatNumber(item.dist) }}</td>
           </tr>
         </tbody>
@@ -135,6 +135,13 @@
       </div>
     </div>
 
+    <div class="section" *ngIf="frameData.visitedInBFS && frameData.visitedInBFS.length > 0">
+      <h4 class="section-title">BFS 访问节点</h4>
+      <div class="tag-list">
+        <span *ngFor="let node of frameData.visitedInBFS" class="tag tag-settled">{{ getNodeLabel(node) }}</span>
+      </div>
+    </div>
+
     <div class="section">
       <h4 class="section-title">残余容量</h4>
       <table class="data-table">
@@ -173,6 +180,13 @@
       <div class="info-row">
         <span class="info-label">当前费用：</span>
         <span class="info-value highlight">{{ frameData.costSoFar }}</span>
+      </div>
+    </div>
+
+    <div class="section" *ngIf="frameData.augmentingPath && frameData.augmentingPath.length > 0">
+      <h4 class="section-title">最小费用增广路径</h4>
+      <div class="path-display">
+        {{ formatNodeList(frameData.augmentingPath) }}
       </div>
     </div>
 

@@ -29,7 +29,7 @@
         @if (currentFrame) {
           <div class="frame-description">
             <span class="frame-badge">步骤 {{ currentFrameIndex + 1 }}/{{ frames.length }}</span>
-            <span class="frame-text">{{ currentFrame.description }}</span>
+            <span class="frame-text">{{ translateDescription(currentFrame.description) }}</span>
           </div>
         }
 
@@ -88,7 +88,7 @@
             class="compare-canvas"
           ></app-graph-canvas>
           <div class="compare-desc">
-            {{ compareFrame1?.description || '（已完成）' }}
+            {{ compareFrame1 ? translateDescription(compareFrame1.description) : '（已完成）' }}
           </div>
           @if (compareResult1) {
             <app-result-summary [result]="compareResult1.summary" [graph]="graph" class="result-mini"></app-result-summary>
@@ -116,7 +116,7 @@
             class="compare-canvas"
           ></app-graph-canvas>
           <div class="compare-desc">
-            {{ compareFrame2?.description || '（已完成）' }}
+            {{ compareFrame2 ? translateDescription(compareFrame2.description) : '（已完成）' }}
           </div>
           @if (compareResult2) {
             <app-result-summary [result]="compareResult2.summary" [graph]="graph" class="result-mini"></app-result-summary>

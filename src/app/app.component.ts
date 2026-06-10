@@ -416,4 +416,17 @@ export class AppComponent implements OnInit, OnDestroy {
   handleChangeSpeed(speed: number): void {
     this.animationService.setSpeed(speed as 0.5 | 1 | 2 | 4);
   }
+
+  translateDescription(description: string): string {
+    if (!description) return description;
+    const sortedNodes = [...this.graph.nodes].sort(
+      (a, b) => b.id.length - a.id.length
+    );
+    let result = description;
+    for (const node of sortedNodes) {
+      const regex = new RegExp(node.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+      result = result.replace(regex, node.label);
+    }
+    return result;
+  }
 }
