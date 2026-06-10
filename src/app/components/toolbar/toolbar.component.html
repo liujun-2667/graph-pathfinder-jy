@@ -1,0 +1,88 @@
+<div class="toolbar">
+  <div class="toolbar-group">
+    <label class="toolbar-label">算法：</label>
+    <select [(ngModel)]="selectedAlgorithm" class="toolbar-select">
+      <option *ngFor="let opt of algorithmOptions" [value]="opt.value">{{ opt.label }}</option>
+    </select>
+    <button class="btn btn-primary" (click)="onRun()">运行</button>
+  </div>
+
+  <div class="toolbar-group">
+    <button class="btn" (click)="openRandomDialog()">🎲 随机生成</button>
+    <button class="btn" (click)="openPresetDialog()">📋 预设案例</button>
+  </div>
+
+  <div class="toolbar-group">
+    <button class="btn" (click)="onImportClick()">📥 导入JSON</button>
+    <button class="btn" (click)="exportJson.emit()">📤 导出JSON</button>
+    <button class="btn" (click)="exportPng.emit()">🖼️ 导出PNG</button>
+    <button class="btn btn-danger" (click)="clearGraph.emit()">🗑️ 清空</button>
+  </div>
+
+  <div class="toolbar-group">
+    <label class="switch">
+      <input type="checkbox" [checked]="compareMode" (change)="onToggleCompareMode()">
+      <span class="slider"></span>
+    </label>
+    <span class="compare-label">对比模式</span>
+  </div>
+
+  <input #fileInput type="file" accept=".json" style="display: none" (change)="onFileSelected($event)">
+</div>
+
+<div *ngIf="showRandomDialog" class="modal-overlay" (click)="closeRandomDialog()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>随机生成图</h3>
+    <div class="form-row">
+      <label>节点数 (5-20):</label>
+      <input type="number" min="5" max="20" [(ngModel)]="randomConfig.nodeCount" class="form-input">
+    </div>
+    <div class="form-row">
+      <label>密度：</label>
+      <select [(ngModel)]="randomConfig.density" class="form-select">
+        <option value="sparse">稀疏</option>
+        <option value="medium">中等</option>
+        <option value="dense">稠密</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>权重范围：</label>
+      <div class="range-inputs">
+        <input type="number" [(ngModel)]="randomConfig.weightMin" class="form-input small">
+        <span>~</span>
+        <input type="number" [(ngModel)]="randomConfig.weightMax" class="form-input small">
+      </div>
+    </div>
+    <div class="form-row checkbox-row">
+      <label>
+        <input type="checkbox" [(ngModel)]="randomConfig.allowNegative">
+        <span>允许负权边（Bellman-Ford）</span>
+      </label>
+    </div>
+    <div class="form-row checkbox-row">
+      <label>
+        <input type="checkbox" [(ngModel)]="randomConfig.forNetworkFlow">
+        <span>生成网络流图（含容量和费用）</span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" (click)="closeRandomDialog()">取消</button>
+      <button class="btn btn-primary" (click)="confirmRandom()">生成</button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showPresetDialog" class="modal-overlay" (click)="closePresetDialog()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>预设案例</h3>
+    <div class="preset-list">
+      <button *ngFor="let preset of presets" class="preset-item" (click)="selectPreset(preset.name)">
+        <span class="preset-name">{{ preset.name }}</span>
+        <span class="preset-desc">{{ preset.description }}</span>
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" (click)="closePresetDialog()">取消</button>
+    </div>
+  </div>
+</div>

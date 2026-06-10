@@ -1,0 +1,188 @@
+<div class="graph-canvas-container">
+  <svg
+    #svgContainer
+    class="graph-svg graph-canvas"
+    (mousedown)="onSvgMouseDown($event)"
+    (mousemove)="onSvgMouseMove($event)"
+    (wheel)="onSvgWheel($event)"
+    (dblclick)="onSvgDoubleClick($event)"
+    (contextmenu)="$event.preventDefault()"
+  >
+    <defs>
+      <marker
+        id="arrow-default"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#666" />
+      </marker>
+      <marker
+        id="arrow-relaxing"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff9800" />
+      </marker>
+      <marker
+        id="arrow-in-tree"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#4caf50" />
+      </marker>
+      <marker
+        id="arrow-in-path"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#2196f3" />
+      </marker>
+      <marker
+        id="arrow-augmenting"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#9c27b0" />
+      </marker>
+      <marker
+        id="arrow-residual"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#795548" />
+      </marker>
+      <marker
+        id="arrow-saturated"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f44336" />
+      </marker>
+    </defs>
+
+    <g #canvasGroup [attr.transform]="getTransformString()">
+      <svg:rect
+        class="grid-bg"
+        [attr.x]="-10000"
+        [attr.y]="-10000"
+        [attr.width]="20000"
+        [attr.height]="20000"
+      />
+
+      @for (layout of getEdgeLayouts(); track layout.id) {
+        @let edge = getEdgeByLayoutId(layout.id);
+        @if (edge) {
+          <g class="edge-group">
+            <path
+              class="edge-hitbox"
+              [attr.d]="layout.path"
+              (contextmenu)="onEdgeContextMenu(edge, $event)"
+            />
+            <path
+              class="edge"
+              [ngClass]="getEdgeClass(layout.id)"
+              [attr.d]="layout.path"
+              [attr.marker-end]="'url(#arrow-' + getEdgeState(layout.id) + ')'"
+              (contextmenu)="onEdgeContextMenu(edge, $event)"
+            />
+            <g
+              class="edge-label"
+              [attr.transform]="'translate(' + layout.labelX + ', ' + layout.labelY + ')'"
+              (contextmenu)="onEdgeContextMenu(edge, $event)"
+            >
+              <rect class="edge-label-bg" x="-22" y="-12" width="44" height="24" rx="4" />
+              <text class="edge-label-text" text-anchor="middle" dominant-baseline="central">
+                {{ getEdgeLabel(edge) }}
+              </text>
+            </g>
+          </g>
+        }
+      }
+
+      @if (isCreatingEdge && edgeStartNode) {
+        <line
+          class="edge-preview"
+          [attr.x1]="edgeStartNode.x"
+          [attr.y1]="edgeStartNode.y"
+          [attr.x2]="edgeEndPos.x"
+          [attr.y2]="edgeEndPos.y"
+        />
+      }
+
+      @for (node of graph.nodes; track node.id) {
+        <g
+          class="node"
+          [ngClass]="getNodeClass(node.id)"
+          [attr.transform]="'translate(' + node.x + ', ' + node.y + ')'"
+          (mousedown)="onNodeMouseDown(node, $event)"
+          (mouseup)="onNodeMouseUp(node, $event)"
+          (mouseenter)="onNodeMouseEnter(node, $event)"
+          (mouseleave)="onNodeMouseLeave(node, $event)"
+          (contextmenu)="onNodeContextMenu(node, $event)"
+        >
+          <circle class="node-halo" r="40" />
+          <circle class="node-body" [attr.r]="NODE_RADIUS" />
+          <circle
+            class="node-edge-handle"
+            [attr.r]="NODE_RADIUS + 4"
+            (mousedown)="onEdgeStartMouseDown(node, $event)"
+          />
+          <text class="node-label" text-anchor="middle" dominant-baseline="central">
+            {{ node.label }}
+          </text>
+        </g>
+      }
+    </g>
+  </svg>
+
+  @if (contextMenu) {
+    <div
+      class="context-menu"
+      [style.left.px]="contextMenu.x"
+      [style.top.px]="contextMenu.y"
+      (click)="closeContextMenu()"
+    >
+      @for (item of contextMenu.items; track item.label) {
+        @if (item.divider) {
+          <div class="context-menu-divider"></div>
+        } @else {
+          <button
+            class="context-menu-item"
+            [class.danger]="item.danger"
+            (click)="item.action()"
+          >
+            {{ item.label }}
+          </button>
+        }
+      }
+    </div>
+  }
+</div>

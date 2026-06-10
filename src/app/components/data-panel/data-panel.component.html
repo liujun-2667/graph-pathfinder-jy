@@ -1,0 +1,212 @@
+<div class="data-panel">
+  <div class="panel-header">数据面板</div>
+
+  <div *ngIf="!algorithmType" class="empty-state">
+    请选择一个算法
+  </div>
+
+  <ng-container *ngIf="algorithmType === 'dijkstra' && isDijkstraData(frameData)">
+    <div class="section">
+      <h4 class="section-title">距离数组</h4>
+      <table class="data-table">
+        <thead>
+          <tr><th>节点</th><th>距离</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of getDistanceEntries(frameData)">
+            <td>{{ item.node }}</td>
+            <td [class.highlight]="frameData.currentNode === item.node">{{ formatNumber(item.dist) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h4 class="section-title">优先队列</h4>
+      <table class="data-table">
+        <thead>
+          <tr><th>节点</th><th>距离</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of frameData.priorityQueue; let i = index" [class.top]="i === 0">
+            <td>{{ item.node }}</td>
+            <td>{{ formatNumber(item.dist) }}</td>
+          </tr>
+          <tr *ngIf="frameData.priorityQueue.length === 0">
+            <td colspan="2" class="empty-cell">队列为空</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h4 class="section-title">已确定节点</h4>
+      <div class="tag-list">
+        <span *ngFor="let node of frameData.settledNodes" class="tag tag-settled">{{ node }}</span>
+        <span *ngIf="frameData.settledNodes.length === 0" class="empty-inline">无</span>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="algorithmType === 'bellman-ford' && isBellmanFordData(frameData)">
+    <div class="section">
+      <h4 class="section-title">迭代状态</h4>
+      <div class="info-row">
+        <span class="info-label">当前迭代：</span>
+        <span class="info-value">{{ frameData.currentIteration }} / {{ frameData.totalIterations }}</span>
+      </div>
+      <div class="info-row" *ngIf="frameData.hasNegativeCycle !== undefined">
+        <span class="info-label">负环检测：</span>
+        <span class="info-value" [class.negative]="frameData.hasNegativeCycle">
+          {{ frameData.hasNegativeCycle ? '存在负环' : '无负环' }}
+        </span>
+      </div>
+      <div class="info-row" *ngIf="frameData.negativeCycleNodes && frameData.negativeCycleNodes.length">
+        <span class="info-label">负环节点：</span>
+        <span class="info-value negative">{{ frameData.negativeCycleNodes.join(' → ') }}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h4 class="section-title">距离数组</h4>
+      <table class="data-table">
+        <thead>
+          <tr><th>节点</th><th>距离</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of getDistanceEntries(frameData)">
+            <td>{{ item.node }}</td>
+            <td>{{ formatNumber(item.dist) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h4 class="section-title">本轮松弛的边</h4>
+      <div class="tag-list">
+        <span *ngFor="let edgeId of frameData.relaxedInIteration" class="tag tag-edge">
+          {{ getEdgeLabel(edgeId) }}
+        </span>
+        <span *ngIf="frameData.relaxedInIteration.length === 0" class="empty-inline">无</span>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="algorithmType === 'floyd-warshall' && isFloydWarshallData(frameData)">
+    <div class="section">
+      <h4 class="section-title">距离矩阵</h4>
+      <div class="info-row mb">
+        <span class="info-label">k = {{ frameData.currentK }}，</span>
+        <span class="info-label">i = {{ frameData.currentI }}，</span>
+        <span class="info-label">j = {{ frameData.currentJ }}</span>
+      </div>
+      <div class="matrix-wrapper">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th *ngFor="let label of frameData.nodeLabels">{{ label }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of frameData.distanceMatrix; let i = index">
+              <th>{{ frameData.nodeLabels[i] }}</th>
+              <td
+                *ngFor="let cell of row; let j = index"
+                [class.updated]="isCellUpdated(frameData, i, j)"
+                [class.current]="isCurrentCell(frameData, i, j)"
+              >
+                {{ formatNumber(cell) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="algorithmType === 'edmonds-karp' && isEdmondsKarpData(frameData)">
+    <div class="section">
+      <h4 class="section-title">流信息</h4>
+      <div class="info-row">
+        <span class="info-label">当前最大流：</span>
+        <span class="info-value highlight">{{ frameData.maxFlowSoFar }}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h4 class="section-title">残余容量</h4>
+      <table class="data-table">
+        <thead>
+          <tr><th>边</th><th>残余容量</th><th>流量</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let edge of graph.edges">
+            <td>{{ getEdgeLabel(edge.id) }}</td>
+            <td>{{ frameData.residualCapacity[edge.id] || 0 }}</td>
+            <td>{{ frameData.flow[edge.id] || 0 }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h4 class="section-title">增广路径</h4>
+      <div *ngIf="frameData.augmentingPath.length > 0" class="path-display">
+        {{ frameData.augmentingPath.join(' → ') }}
+      </div>
+      <div *ngIf="frameData.minCutS && frameData.minCutT" class="min-cut">
+        <div><strong>S：</strong>{{ frameData.minCutS.join(', ') }}</div>
+        <div><strong>T：</strong>{{ frameData.minCutT.join(', ') }}</div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="algorithmType === 'min-cost-max-flow' && isMinCostFlowData(frameData)">
+    <div class="section">
+      <h4 class="section-title">费用流信息</h4>
+      <div class="info-row">
+        <span class="info-label">当前流量：</span>
+        <span class="info-value highlight">{{ frameData.flowSoFar }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">当前费用：</span>
+        <span class="info-value highlight">{{ frameData.costSoFar }}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h4 class="section-title">残余网络</h4>
+      <table class="data-table">
+        <thead>
+          <tr><th>边</th><th>残余容量</th><th>残余费用</th><th>流量</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let edge of graph.edges">
+            <td>{{ getEdgeLabel(edge.id) }}</td>
+            <td>{{ frameData.residualCapacity[edge.id] || 0 }}</td>
+            <td>{{ frameData.residualCost[edge.id] || 0 }}</td>
+            <td>{{ frameData.flow[edge.id] || 0 }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h4 class="section-title">距离与势能</h4>
+      <table class="data-table">
+        <thead>
+          <tr><th>节点</th><th>距离</th><th>势能</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let node of graph.nodes">
+            <td>{{ node.id }}</td>
+            <td>{{ formatNumber(frameData.distances[node.id] || INF) }}</td>
+            <td>{{ frameData.potential[node.id] || 0 }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>

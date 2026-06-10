@@ -1,0 +1,256 @@
+.graph-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.graph-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.grid-bg {
+  fill: #fafafa;
+}
+
+.edge-group {
+  cursor: pointer;
+}
+
+.edge-hitbox {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18;
+  pointer-events: stroke;
+}
+
+.edge {
+  fill: none;
+  stroke: #666;
+  stroke-width: 2;
+  pointer-events: none;
+  transition: stroke 0.2s, stroke-width 0.2s;
+
+  &.edge-state-default {
+    stroke: #666;
+    stroke-width: 2;
+  }
+
+  &.edge-state-relaxing {
+    stroke: #ff9800;
+    stroke-width: 3;
+    animation: edge-pulse 0.6s ease-in-out infinite;
+  }
+
+  &.edge-state-in-tree {
+    stroke: #4caf50;
+    stroke-width: 3;
+  }
+
+  &.edge-state-in-path {
+    stroke: #2196f3;
+    stroke-width: 3.5;
+  }
+
+  &.edge-state-augmenting {
+    stroke: #9c27b0;
+    stroke-width: 3;
+    animation: edge-pulse 0.5s ease-in-out infinite;
+  }
+
+  &.edge-state-residual {
+    stroke: #795548;
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+  }
+
+  &.edge-state-saturated {
+    stroke: #f44336;
+    stroke-width: 3;
+  }
+}
+
+.edge-label {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.edge-label-bg {
+  fill: #fff;
+  stroke: #ddd;
+  stroke-width: 1;
+}
+
+.edge-label-text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  fill: #333;
+  pointer-events: none;
+}
+
+.edge-preview {
+  stroke: #1976d2;
+  stroke-width: 2;
+  stroke-dasharray: 8 4;
+  fill: none;
+  pointer-events: none;
+}
+
+.node {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.node-halo {
+  fill: transparent;
+  pointer-events: none;
+}
+
+.node-body {
+  stroke: #333;
+  stroke-width: 2;
+  transition: fill 0.2s, stroke 0.2s, r 0.2s;
+}
+
+.node-edge-handle {
+  fill: transparent;
+  cursor: crosshair;
+
+  &:hover {
+    fill: rgba(25, 118, 210, 0.15);
+  }
+}
+
+.node-label {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  fill: #fff;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.node-state-default {
+  .node-body {
+    fill: #78909c;
+    stroke: #455a64;
+  }
+}
+
+.node-state-source {
+  .node-body {
+    fill: #4caf50;
+    stroke: #2e7d32;
+  }
+}
+
+.node-state-target {
+  .node-body {
+    fill: #f44336;
+    stroke: #c62828;
+  }
+}
+
+.node-state-visiting {
+  .node-body {
+    fill: #ffc107;
+    stroke: #f57f17;
+  }
+}
+
+.node-state-visited {
+  .node-body {
+    fill: #81c784;
+    stroke: #388e3c;
+  }
+}
+
+.node-state-settled {
+  .node-body {
+    fill: #66bb6a;
+    stroke: #2e7d32;
+  }
+}
+
+.node-state-in-path {
+  .node-body {
+    fill: #42a5f5;
+    stroke: #1565c0;
+    animation: node-pulse 0.8s ease-in-out infinite;
+  }
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 10000;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  padding: 4px 0;
+  user-select: none;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: #eee;
+  margin: 4px 0;
+}
+
+.context-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #f0f7ff;
+    color: #1976d2;
+  }
+
+  &.danger {
+    color: #e53935;
+
+    &:hover {
+      background: #ffebee;
+      color: #c62828;
+    }
+  }
+}
+
+@keyframes node-pulse {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes edge-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

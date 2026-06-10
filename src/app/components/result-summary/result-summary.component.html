@@ -1,0 +1,94 @@
+<div class="result-summary">
+  <div class="panel-header">执行结果</div>
+
+  <div *ngIf="!result" class="empty-state">
+    运行算法后在此查看结果
+  </div>
+
+  <ng-container *ngIf="result && isShortestPath(result)">
+    <div class="result-section">
+      <div class="result-row">
+        <span class="result-label">路径长度：</span>
+        <span class="result-value highlight">{{ result.value ?? '-' }}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">具体路径：</span>
+      </div>
+      <div *ngIf="result.path && result.path.length > 0" class="path-display">
+        {{ result.path.join(' → ') }}
+      </div>
+      <div *ngIf="!result.path || result.path.length === 0" class="no-path">
+        不可达
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="result && isAllPairsPath(result)">
+    <div class="result-section">
+      <h4 class="result-title">所有节点对最短路径</h4>
+      <div *ngIf="result.paths && result.paths.length > 0" class="paths-list">
+        <div *ngFor="let p of result.paths" class="path-item">
+          <div class="path-header">
+            <span class="path-from-to">{{ p.from }} → {{ p.to }}</span>
+            <span class="path-distance">距离：{{ p.distance }}</span>
+          </div>
+          <div class="path-detail">{{ p.path.join(' → ') }}</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="result && isMaxFlow(result)">
+    <div class="result-section">
+      <div class="result-row">
+        <span class="result-label">最大流值：</span>
+        <span class="result-value highlight">{{ result.maxFlow ?? '-' }}</span>
+      </div>
+      <div *ngIf="result.minCut" class="min-cut-section">
+        <div class="result-row">
+          <span class="result-label">最小割：</span>
+        </div>
+        <div class="min-cut-sets">
+          <div class="cut-set">
+            <span class="cut-label">S：</span>
+            <span class="cut-nodes">{{ result.minCut.S.join(', ') }}</span>
+          </div>
+          <div class="cut-set">
+            <span class="cut-label">T：</span>
+            <span class="cut-nodes">{{ result.minCut.T.join(', ') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="result && isMinCostFlow(result)">
+    <div class="result-section">
+      <div class="result-row">
+        <span class="result-label">总流量：</span>
+        <span class="result-value highlight">{{ result.totalFlow ?? '-' }}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">总费用：</span>
+        <span class="result-value highlight">{{ result.totalCost ?? '-' }}</span>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="result && isNegativeCycle(result)">
+    <div class="result-section">
+      <div class="result-row">
+        <span class="result-label">是否存在负环：</span>
+        <span class="result-value" [class.positive]="!result.hasNegativeCycle" [class.negative]="result.hasNegativeCycle">
+          {{ result.hasNegativeCycle ? '是' : '否' }}
+        </span>
+      </div>
+      <div *ngIf="result.hasNegativeCycle && result.negativeCycle && result.negativeCycle.length" class="result-row">
+        <span class="result-label">负环节点：</span>
+      </div>
+      <div *ngIf="result.hasNegativeCycle && result.negativeCycle && result.negativeCycle.length" class="negative-cycle-display">
+        {{ result.negativeCycle.join(' → ') }}
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -1,0 +1,165 @@
+.result-summary {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+.result-section {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.result-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: #333;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.result-label {
+  color: #666;
+  margin-right: 8px;
+  min-width: 80px;
+}
+
+.result-value {
+  font-weight: 500;
+  color: #333;
+
+  &.highlight {
+    font-size: 20px;
+    color: #1976d2;
+    font-weight: 700;
+  }
+
+  &.positive {
+    color: #2e7d32;
+    font-weight: 600;
+  }
+
+  &.negative {
+    color: #e53935;
+    font-weight: 600;
+  }
+}
+
+.path-display {
+  padding: 10px 14px;
+  background: #e8f5e9;
+  border-radius: 6px;
+  font-family: 'Consolas', monospace;
+  font-size: 14px;
+  color: #2e7d32;
+  line-height: 1.6;
+  margin-left: 88px;
+}
+
+.no-path {
+  padding: 10px 14px;
+  background: #ffebee;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #c62828;
+  margin-left: 88px;
+}
+
+.paths-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.path-item {
+  padding: 10px 12px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+}
+
+.path-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.path-from-to {
+  font-weight: 600;
+  color: #1976d2;
+  font-size: 13px;
+}
+
+.path-distance {
+  font-size: 13px;
+  color: #555;
+}
+
+.path-detail {
+  font-family: 'Consolas', monospace;
+  font-size: 13px;
+  color: #444;
+}
+
+.min-cut-section {
+  margin-top: 8px;
+}
+
+.min-cut-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 88px;
+}
+
+.cut-set {
+  padding: 6px 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.cut-label {
+  font-weight: 600;
+  color: #555;
+  margin-right: 6px;
+}
+
+.cut-nodes {
+  font-family: 'Consolas', monospace;
+  color: #333;
+}
+
+.negative-cycle-display {
+  padding: 10px 14px;
+  background: #ffebee;
+  border-radius: 6px;
+  font-family: 'Consolas', monospace;
+  font-size: 14px;
+  color: #c62828;
+  margin-left: 88px;
+}

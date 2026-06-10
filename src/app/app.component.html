@@ -1,0 +1,127 @@
+<div class="app-container">
+  <app-toolbar
+    (runAlgorithm)="handleRunAlgorithm($event)"
+    (randomGraph)="handleRandomGraph($event)"
+    (loadPreset)="handleLoadPreset($event)"
+    (exportJson)="handleExportJson()"
+    (importJson)="handleImportJson($event)"
+    (exportPng)="handleExportPng()"
+    (clearGraph)="handleClearGraph()"
+    (toggleCompareMode)="handleToggleCompareMode()"
+    class="toolbar"
+  ></app-toolbar>
+
+  <div class="main-content">
+    @if (!compareMode) {
+      <div class="canvas-area">
+        <app-graph-canvas
+          [graph]="graph"
+          [highlight]="currentHighlight"
+          (requestCreateNode)="handleCreateNode($event)"
+          (requestCreateEdge)="handleCreateEdge($event)"
+          (requestDeleteNode)="handleDeleteNode($event)"
+          (requestDeleteEdge)="handleDeleteEdge($event)"
+          (requestEditEdge)="handleEditEdge($event)"
+          (requestMarkNode)="handleMarkNode($event)"
+          class="canvas"
+        ></app-graph-canvas>
+
+        @if (currentFrame) {
+          <div class="frame-description">
+            <span class="frame-badge">步骤 {{ currentFrameIndex + 1 }}/{{ frames.length }}</span>
+            <span class="frame-text">{{ currentFrame.description }}</span>
+          </div>
+        }
+
+        @if (frames.length > 0) {
+          <app-animation-controls
+            [currentFrame]="currentFrameIndex"
+            [totalFrames]="frames.length"
+            [isPlaying]="isPlaying"
+            [speed]="speed"
+            (play)="handlePlay()"
+            (pause)="handlePause()"
+            (stepForward)="handleStepForward()"
+            (stepBack)="handleStepBack()"
+            (seek)="handleSeek($event)"
+            (changeSpeed)="handleChangeSpeed($event)"
+            class="anim-controls"
+          ></app-animation-controls>
+        }
+      </div>
+
+      <div class="side-panel">
+        <app-algorithm-info
+          [algorithmType]="currentAlgorithm"
+          class="info-panel"
+        ></app-algorithm-info>
+
+        @if (currentAlgorithm && currentFrame) {
+          <app-data-panel
+            [algorithmType]="currentAlgorithm"
+            [frameData]="currentFrameData"
+            [graph]="graph"
+            class="data-panel"
+          ></app-data-panel>
+        }
+
+        @if (currentResult) {
+          <app-result-summary
+            [result]="currentResult"
+            class="result-panel"
+          ></app-result-summary>
+        }
+      </div>
+    } @else {
+      <div class="compare-mode">
+        <div class="compare-left">
+          <div class="compare-title">
+            <span class="algo-label dijkstra">Dijkstra</span>
+            <span class="step-label">
+              步骤 {{ compareFrame1 ? compareFrameIndex + 1 : '-' }}/{{ compareResult1 ? compareResult1.frames.length : 0 }}
+            </span>
+          </div>
+          <app-graph-canvas
+            [graph]="graph"
+            [highlight]="compareFrame1?.highlight || null"
+            class="compare-canvas"
+          ></app-graph-canvas>
+          <div class="compare-desc">
+            {{ compareFrame1?.description || '（已完成）' }}
+          </div>
+          @if (compareResult1) {
+            <app-result-summary [result]="compareResult1.summary" class="result-mini"></app-result-summary>
+          }
+        </div>
+
+        <div class="compare-divider">
+          <div class="compare-controls">
+            <button (click)="compareStepBack()" class="ctrl-btn">⏮</button>
+            <span class="ctrl-info">帧 {{ compareFrameIndex + 1 }} / {{ compareMaxFrames }}</span>
+            <button (click)="compareStepForward()" class="ctrl-btn">⏭</button>
+          </div>
+        </div>
+
+        <div class="compare-right">
+          <div class="compare-title">
+            <span class="algo-label bellman">Bellman-Ford</span>
+            <span class="step-label">
+              步骤 {{ compareFrame2 ? compareFrameIndex + 1 : '-' }}/{{ compareResult2 ? compareResult2.frames.length : 0 }}
+            </span>
+          </div>
+          <app-graph-canvas
+            [graph]="graph"
+            [highlight]="compareFrame2?.highlight || null"
+            class="compare-canvas"
+          ></app-graph-canvas>
+          <div class="compare-desc">
+            {{ compareFrame2?.description || '（已完成）' }}
+          </div>
+          @if (compareResult2) {
+            <app-result-summary [result]="compareResult2.summary" class="result-mini"></app-result-summary>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

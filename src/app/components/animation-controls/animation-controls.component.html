@@ -1,0 +1,43 @@
+<div class="animation-controls">
+  <div class="controls-row">
+    <div class="playback-buttons">
+      <button class="ctrl-btn" (click)="stepBack.emit()" [disabled]="currentFrame <= 0 || totalFrames === 0" title="上一帧">
+        ⏮
+      </button>
+      <button class="ctrl-btn ctrl-btn-primary" (click)="isPlaying ? pause.emit() : play.emit()" [disabled]="totalFrames === 0" [title]="isPlaying ? '暂停' : '播放'">
+        {{ isPlaying ? '⏸' : '▶' }}
+      </button>
+      <button class="ctrl-btn" (click)="stepForward.emit()" [disabled]="currentFrame >= totalFrames - 1 || totalFrames === 0" title="下一帧">
+        ⏭
+      </button>
+    </div>
+
+    <div class="speed-selector">
+      <label class="ctrl-label">速度：</label>
+      <select class="ctrl-select" [value]="speed" (change)="onSpeedChange($event)">
+        <option *ngFor="let s of speedOptions" [value]="s">{{ s }}x</option>
+      </select>
+    </div>
+
+    <div class="frame-info">
+      帧 <span class="frame-num">{{ currentFrame + 1 }}</span> / {{ totalFrames }}
+    </div>
+  </div>
+
+  <div class="progress-row">
+    <input
+      type="range"
+      class="progress-slider"
+      min="0"
+      [max]="totalFrames > 0 ? totalFrames - 1 : 0"
+      [value]="currentFrame"
+      [disabled]="totalFrames === 0"
+      (input)="onSeek($event)"
+    >
+    <div class="progress-bar-wrapper">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="progressPercent"></div>
+      </div>
+    </div>
+  </div>
+</div>

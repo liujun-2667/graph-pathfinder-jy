@@ -1,0 +1,26 @@
+<div class="algorithm-info">
+  <div class="panel-header">算法介绍</div>
+
+  <div *ngIf="!info" class="empty-state">
+    请选择一个算法查看介绍
+  </div>
+
+  <ng-container *ngIf="info">
+    <div class="info-section">
+      <h3 class="algo-name">{{ info.name }}</h3>
+      <span class="algo-category" [class.path]="info.category === 'shortest-path'" [class.flow]="info.category === 'network-flow'">
+        {{ info.category === 'shortest-path' ? '最短路径' : '网络流' }}
+      </span>
+    </div>
+
+    <div class="info-section">
+      <h4 class="section-title">简介</h4>
+      <p class="description">{{ info.description }}</p>
+    </div>
+
+    <div class="info-section">
+      <h4 class="section-title">伪代码</h4>
+      <pre class="pseudocode"><code>{{ info.pseudocode }}</code></pre>
+    </div>
+  </ng-container>
+</div>
