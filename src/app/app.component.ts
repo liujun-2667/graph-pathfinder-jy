@@ -11,7 +11,9 @@ import { AlgorithmInfoComponent } from './components/algorithm-info/algorithm-in
 import { ResultSummaryComponent } from './components/result-summary/result-summary.component';
 import { GraphService } from './services/graph.service';
 import { AnimationService } from './services/animation.service';
+import { HistoryService, HistoryRecord } from './services/history.service';
 import { PRESET_GRAPHS } from './data/presets';
+import { ALGORITHM_INFO } from './data/algorithm-info';
 
 import {
   GraphData,
@@ -75,6 +77,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private graphService: GraphService,
     private animationService: AnimationService,
+    private historyService: HistoryService,
     @Inject(PLATFORM_ID) private platformId: object
   ) {}
 
@@ -236,6 +239,71 @@ export class AppComponent implements OnInit, OnDestroy {
     if (result) {
       this.currentResult = result.summary;
       this.animationService.setFrames(result.frames);
+      this.saveToHistory(type, result);
+    }
+  }
+
+  private saveToHistory(type: AlgorithmType, result: AlgorithmResult): void {
+    const algoInfo = ALGORITHM_INFO[type];
+    const sourceNode = this.graph.nodes.find((n) => n.id === this.sourceId);
+    const targetNode = this.graph.nodes.find((n) => n.id === this.targetId);
+
+    const resultValue = this.extractResultValue(result.summary);
+    const resultText = this.formatResultText(result.summary);
+
+    this.historyService.addRecord({
+      algorithm: type,
+      algorithmName: algoInfo.name,
+      graphData: {
+        nodes: [...this.graph.nodes],
+        edges: [...this.graph.edges],
+      },
+      sourceId: this.sourceId,
+      targetId: this.targetId,
+      sourceLabel: sourceNode?.label || null,
+      targetLabel: targetNode?.label || null,
+      nodeCount: this.graph.nodes.length,
+      edgeCount: this.graph.edges.length,
+      resultSummary: result.summary,
+      frames: [...result.frames],
+      frameCount: result.frames.length,
+      resultValue,
+      resultText,
+    });
+  }
+
+  private extractResultValue(summary: AlgorithmResult['summary']): number | null {
+    switch (summary.type) {
+      case 'dijkstra':
+      case 'bellman-ford':
+        return summary.value ?? null;
+      case 'floyd-warshall':
+        return summary.paths?.length ?? null;
+      case 'edmonds-karp':
+        return summary.maxFlow ?? null;
+      case 'min-cost-max-flow':
+        return summary.totalFlow ?? null;
+      default:
+        return null;
+    }
+  }
+
+  private formatResultText(summary: AlgorithmResult['summary']): string {
+    switch (summary.type) {
+      case 'dijkstra':
+      case 'bellman-ford':
+        if (summary.hasNegativeCycle) {
+          return '存在负环';
+        }
+        return summary.value !== undefined ? `距离: ${summary.value}` : '不可达';
+      case 'floyd-warshall':
+        return `${summary.paths?.length || 0} 对路径`;
+      case 'edmonds-karp':
+        return `最大流: ${summary.maxFlow ?? '-'}`;
+      case 'min-cost-max-flow':
+        return `流量: ${summary.totalFlow ?? '-'} / 费用: ${summary.totalCost ?? '-'}`;
+      default:
+        return '已完成';
     }
   }
 
@@ -415,6 +483,24 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   handleChangeSpeed(speed: number): void {
     this.animationService.setSpeed(speed as 0.5 | 1 | 2 | 4);
+  }
+
+  handleReplayHistory(record: HistoryRecord): void {
+    const isSameGraph = this.historyService.isGraphSameAsRecord(this.graph, record);
+
+    if (!isSameGraph && this.graph.nodes.length > 0) {
+      const confirmed = confirm('回放会覆盖当前画布内容，是否继续？');
+      if (!confirmed) return;
+    }
+
+    this.compareMode = false;
+    this.compareResult1 = null;
+    this.compareResult2 = null;
+    this.currentAlgorithm = record.algorithm;
+    this.currentResult = record.resultSummary;
+
+    this.graphService.loadGraph(record.graphData);
+    this.animationService.setFrames([...record.frames]);
   }
 
   translateDescription(description: string): string {

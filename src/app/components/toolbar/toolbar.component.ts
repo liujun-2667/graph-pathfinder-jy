@@ -1,7 +1,9 @@
-import { Component, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
+import { Component, Output, EventEmitter, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { AlgorithmType } from '../../models/graph';
+import { HistoryService, HistoryRecord } from '../../services/history.service';
 
 export interface RandomGraphConfig {
   nodeCount: number;
@@ -19,7 +21,9 @@ export interface RandomGraphConfig {
   templateUrl: './toolbar.component.html',
   styleUrl: './toolbar.component.scss'
 })
-export class ToolbarComponent {
+export class ToolbarComponent implements OnInit, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
+
   @Output() runAlgorithm = new EventEmitter<AlgorithmType>();
   @Output() randomGraph = new EventEmitter<RandomGraphConfig>();
   @Output() loadPreset = new EventEmitter<string>();
@@ -28,6 +32,7 @@ export class ToolbarComponent {
   @Output() exportPng = new EventEmitter<void>();
   @Output() clearGraph = new EventEmitter<void>();
   @Output() toggleCompareMode = new EventEmitter<boolean>();
+  @Output() replayHistory = new EventEmitter<HistoryRecord>();
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -36,6 +41,24 @@ export class ToolbarComponent {
 
   showRandomDialog = false;
   showPresetDialog = false;
+  showHistoryPanel = false;
+
+  historyRecords: HistoryRecord[] = [];
+
+  constructor(private historyService: HistoryService) {}
+
+  ngOnInit(): void {
+    this.historyService.history$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((records) => {
+        this.historyRecords = records;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   randomConfig: RandomGraphConfig = {
     nodeCount: 10,
@@ -107,5 +130,34 @@ export class ToolbarComponent {
       this.importJson.emit(input.files[0]);
       input.value = '';
     }
+  }
+
+  openHistoryPanel(): void {
+    this.showHistoryPanel = true;
+  }
+
+  closeHistoryPanel(): void {
+    this.showHistoryPanel = false;
+  }
+
+  onReplayRecord(record: HistoryRecord): void {
+    this.replayHistory.emit(record);
+    this.showHistoryPanel = false;
+  }
+
+  onClearHistory(): void {
+    if (confirm('确定要清空所有历史记录吗？')) {
+      this.historyService.clearHistory();
+    }
+  }
+
+  formatTime(timestamp: number): string {
+    const date = new Date(timestamp);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 }

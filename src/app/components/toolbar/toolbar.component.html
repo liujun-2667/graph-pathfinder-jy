@@ -27,6 +27,10 @@
     <label class="compare-label" for="compareModeToggle">对比模式</label>
   </div>
 
+  <div class="toolbar-group toolbar-right">
+    <button class="btn" (click)="openHistoryPanel()">📜 历史</button>
+  </div>
+
   <input #fileInput type="file" accept=".json" style="display: none" (change)="onFileSelected($event)">
 </div>
 
@@ -83,6 +87,42 @@
     </div>
     <div class="modal-actions">
       <button class="btn" (click)="closePresetDialog()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showHistoryPanel" class="modal-overlay" (click)="closeHistoryPanel()">
+  <div class="modal history-modal" (click)="$event.stopPropagation()">
+    <div class="history-header">
+      <h3>📜 算法执行历史</h3>
+      <button class="btn btn-danger btn-small" (click)="onClearHistory()" [disabled]="historyRecords.length === 0">清空历史</button>
+    </div>
+    <div class="history-list">
+      <div *ngIf="historyRecords.length === 0" class="history-empty">
+        暂无执行记录，运行算法后将自动保存
+      </div>
+      <div
+        *ngFor="let record of historyRecords"
+        class="history-item"
+        (click)="onReplayRecord(record)"
+      >
+        <div class="history-item-main">
+          <span class="history-algo-name">{{ record.algorithmName }}</span>
+          <span class="history-result">{{ record.resultText }}</span>
+        </div>
+        <div class="history-item-sub">
+          <span class="history-graph-size">{{ record.nodeCount }}节点 / {{ record.edgeCount }}边</span>
+          <span class="history-frames">{{ record.frameCount }}帧</span>
+          <span class="history-time">{{ formatTime(record.timestamp) }}</span>
+        </div>
+        <div *ngIf="record.sourceLabel || record.targetLabel" class="history-item-points">
+          <span *ngIf="record.sourceLabel" class="point-badge source">起点: {{ record.sourceLabel }}</span>
+          <span *ngIf="record.targetLabel" class="point-badge target">终点: {{ record.targetLabel }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" (click)="closeHistoryPanel()">关闭</button>
     </div>
   </div>
 </div>
